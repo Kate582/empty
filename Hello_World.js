@@ -1,4 +1,4 @@
-// {Name: Hello_World}
+// {Namwwwwwwe: Hello_World}
 // {Description: Hello World example of the Alan Platform functionality: intent() / play() / user- and pre-defined slots / contexts}
 
 // Welcome to the Alan Platform.
