@@ -1,4 +1,4 @@
-// {Namwwwwwwe: Hello_World}
+// {Name: Hello_World}
 // {Description: Hello World example of the Alan Platform functionality: intent() / play() / user- and pre-defined slots / contexts}
 
 // Welcome to the Alan Platform.
@@ -8,6 +8,11 @@
 // Let's start with a simple command.
 // To define a voice command, we will use the 'intent()' function (https://alan.app/docs/server-api/commands-and-responses#intent).
 // Responses can be played back to the user with the 'play()' function (https://alan.app/docs/server-api/commands-and-responses#play).
+
+intent('Hello world', p => {
+    p.play('Hi there');
+});
+
 
 intent('Hello world', p => {
     p.play('Hi there');
@@ -159,6 +164,10 @@ intent('Add $(NUMBER) $(INSTRUMENT trumpet_|guitar_|violin_) and $(NUMBER) $(INS
     p.play(`The second position of your order is: ${p.NUMBER_[1].number} ${p.INSTRUMENT_[1].value}`);
 });
 
+intent('Hello world', p => {
+    p.play('Hi there');
+});
+
 // Try: "Add two guitars and one violin" or "Add five trumpets and three guitars".
 // In this intent, we also use the 'console.log()' function. The output of this function will be printed into the Info logs.
 
@@ -239,6 +248,10 @@ question(
     'Why do I need this',
     reply('This is a Hello World Example project. Its main purpose is to get you introduced to basics of the Alan Platform!'),
 );
+
+intent('Hello world', p => {
+    p.play('Hi there');
+});
 
 question(
     'How does this work',

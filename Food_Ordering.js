@@ -27,10 +27,7 @@ const menu = {
         {id: "tco", title: "Taco", price: 10, type: "street food"},
         {id: "snd", title: "Sandwich", price: 10, type: "street food"}
     ],
-    "dessert": [
-        {id: "apl", title: "Apple pie", price: 5, type: "dessert"},
-        {id: "chc", title: "Cheesecake", price: 15, type: "dessert"}
-    ]
+
 };
 
 const dishes = [
@@ -60,10 +57,7 @@ const CATEGORY_ALIASES = _.reduce(Object.keys(menu), (a, p) => {
     return a;
 }, {});
 
-const ID_TO_TYPES = _.reduce(menu, (a, p) => {
-    p.forEach(i => a[i.id] = i.type);
-    return a;
-}, {});
+
 
 const ITEM_ALIASES = _.reduce(menu, (a, p) => {
     p.forEach(i => {
@@ -191,10 +185,7 @@ intent(`scroll up`, p => {
     p.play({command: 'scroll', direction: 'up'});
 });
 
-intent(`(clear|remove|empty|cancel) order`, p => {
-    p.play({command: 'clearOrder', route: 'cleared-order'});
-    p.play(`Your order has been canceled`);
-});
+
 
 let confirm = context(() => {
     follow('(yes|ok|correct|procede|confirm|continue|next|go on)', p => {
@@ -222,93 +213,8 @@ let confirm = context(() => {
     });
 })
 
-let playDelivery = function (p, address, date, time) {
-    if (!address) {
-        p.play(`What is delivery address?`);
-    } else if (!time) {
-        p.play({command: 'highlight', id: 'time'});
-        p.play(`What is delivery time?`);
-    } else if (!date) {
-        p.play({command: 'highlight', id: 'date'});
-        p.play(`What is delivery date?`);
-    } else {
-        p.play({command: 'navigation', route: '/cart'});
-        p.play(`OK, your order will be delivered to ${address}. Do you want to confirm your order?`);
-        p.then(confirm, {address, date, time});
-        return false;
-    }
-    return true;
-}
-
-// request delivery time
-let checkout = context(() => {
-    follow('$(LOC)', p => {
-        p.play({command: "address", address: p.LOC.value});
-        p.play({command: `highlight`, id: `address`});
-
-        let date = api.moment().tz(p.timeZone).format("MMMM Do");
-        let time = api.moment().tz(p.timeZone).add(30, 'minutes').format("h:mm a");
-        p.play({command: "time", time: time, date: date});
-        playDelivery(p, p.LOC.value, date, time);
-    });
-
-    follow('$(TIME)', '$(T now|asap|right now|as soon as possible)', '$(DATE)',
-        '$(TIME) $(DATE)', '$(DATE) $(TIME)', p => {
-            let time, date;
-            if (p.T) {
-                // deliver in 30 minutes
-                date = api.moment().tz(p.timeZone).format("MMMM Do");
-                time = api.moment().tz(p.timeZone).add(30, 'minutes').format("h:mm a");
-                p.play({command: 'highlight', id: 'date'});
-            }
-            if (p.TIME) {
-                time = p.TIME;
-                date = date ? date : p.visual.date;
-                p.play({command: 'highlight', id: 'time'});
-            }
-            if (p.DATE) {
-                date = p.DATE.moment.format("MMMM Do");
-                time = time ? time : p.visual.time;
-                p.play({command: 'highlight', id: 'date'});
-            }
-            p.play({command: "time", time: time, date: date});
-
-            playDelivery(p, p.visual.address, date, time);
-        });
-
-    follow("back (to order|)", p => {
-        p.play({command: 'navigation', route: '/cart'});
-        p.play(`OK`);
-        p.resolve(null)
-    });
-});
 
 
-let date = context(() => {
-    follow('$(TIME)', '$(T now|asap|right now|as soon as possible)', '$(DATE)',
-        '$(TIME) $(DATE)', '$(DATE) $(TIME)', p => {
-            let time, date;
-            if (p.T) {
-                // deliver in 30 minutes
-                date = api.moment().tz(p.timeZone).format("MMMM Do");
-                time = api.moment().tz(p.timeZone).add(30, 'minutes').format("h:mm a");
-                p.play({command: 'highlight', id: 'date'});
-            }
-            if (p.TIME) {
-                time = p.TIME.value;
-                date = date ? date : p.visual.date;
-                p.play({command: 'highlight', id: 'time'});
-            }
-            if (p.DATE) {
-                date = p.DATE.moment.format("MMMM Do");
-                time = time ? time : p.visual.time;
-                p.play({command: 'highlight', id: 'date'});
-            }
-            p.play({command: "time", time: time, date: date});
-
-            playDelivery(p, p.visual.address, date, time);
-        });
-});
 
 intent(`(add|I want|do you have|order) $(F ${DISHES_INTENT})`, p => {
     p.play(`Unfortunately you can't add  ${p.F} to your order. But we can offer it in our restaurant`);
@@ -432,25 +338,6 @@ intent(`add (another|) $(NUMBER) more`, `add another`, p => {
 });
 
 // remove or update order items
-intent(`(remove|delete|exclude) $(ITEM ${ITEMS_INTENT})`,
-    `(remove|delete|exclude) $(NUMBER) $(ITEM ${ITEMS_INTENT})`, p => {
-        let order = p.visual.order || {};
-        let id = ITEM_ALIASES[p.ITEM.value.toLowerCase()].id;
-        if (!order[id]) {
-            p.play(`${p.ITEM} has not been ordered yet`);
-        } else {
-            let quantity = order[id] ? order[id].quantity : 0;
-            let deteleQnty = p.NUMBER ? p.NUMBER.number : quantity;
-
-            if (quantity - deteleQnty <= 0) {
-                p.play('Removed all ' + p.ITEM.value);
-            } else {
-                p.play(`Updated ${p.ITEM} quantity to ${quantity - deteleQnty}`);
-            }
-            p.play({command: 'removeFromCart', item: id, quantity: deteleQnty});
-            p.play({command: 'navigation', route: '/cart'});
-        }
-    });
 
 // play order details
 intent(`(my order|order details|details)`, p => {
@@ -543,40 +430,5 @@ intent(`that's (all|it)`, '(ready to|) checkout', p => {
     p.then(checkout);
 });
 
-intent(`finish (order|)`, p => {
-    if (_.isEmpty(p.visual.order)) {
-        p.play("Please, add something to your order first");
-    } else {
-        p.play({command: "finishOrder"});
-    }
-});
 
-intent(`what is the total (price|amount) (of the order|for my order|)`,
-    `how much is my order`, p => {
-    if (p.visual.total && p.visual.total > 0) {
-        p.play(`The total amount for your order is: `);
-        if (p.visual.route === '/cart') {
-            p.play({command: 'highlight', id: 'total'});
-        }
-        p.play(`${p.visual.total} dollars`);
-    } else {
-        p.play(`Your cart is empty, please make an order first`)
-    }
-});
 
-intent(`(how much|what) does $(ITEM ${ITEMS_INTENT}) cost`, `How much is $(ITEM ${ITEMS_INTENT})`, p => {
-    let order = p.visual.order || {};
-    let price = ITEM_ALIASES[p.ITEM.value.toLowerCase()].price;
-    let s = price !== 1 ? "s" : "";
-    p.play(`${p.ITEM} (costs|is) ${price} dollar${s}`);
-});
-
-intent("Make the address $(LOC)", "Set address to $(LOC)", "Address (is|) $(LOC)", p => {
-    p.play({command: "address", address: p.LOC.value});
-    p.play({command: `highlight`, id: `address`});
-    p.play(`Delivery address is set to ${p.LOC}`);
-});
-
-projectAPI.greet = (p, param, callback) => {
-    p.play("Welcome to the Food Ordering demo app for food delivery. (How can I help you|What can I get for you|May I take your order|What would you like to order)?");
-};
